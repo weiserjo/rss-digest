@@ -103,6 +103,7 @@ TONE AND LANGUAGE
   carry the interest.
 - Plain, economical prose. Short sentences. State findings directly.
 - Be willing to note limitations or caveats where the abstract makes them apparent.
+- Don't use em dashes.
  
 ================================================================================
 TASK: PRODUCE THE DIGEST
@@ -151,11 +152,14 @@ TASK: PRODUCE THE DIGEST
      is better than a filler one.
  
 5. FEED STATUS
-   - Always include this section, verbatim in substance:
+   - Always include this section, verbatim in substance, the last sentence bold:
      Note that the ACS journal feeds (JACS, JCIM, JCTC, JPCA, JPCB, JPCC, JPCL) are still
-     missing from this digest because of the ongoing ACS server migration. Check whether
-     those RSS feeds are back online and re-add them if so — they cover a large share of
-     the reader's core literature and the digest is incomplete without them.
+     missing from this digest due to unresolved Cloudflare issues on ACS's end. Furthermore,
+     the RSC journal feeds (CS, PCCP) haven't been updated since a server migration at the 
+     end of June. 
+     
+     Make sure to check whether these RSS feeds are working again and manually (re-)add them
+     if so.
    - Render this as a visually distinct closing note.
  
 ================================================================================
