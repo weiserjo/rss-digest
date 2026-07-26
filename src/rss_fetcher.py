@@ -115,7 +115,13 @@ class RSSFetcher:
             date_str = entry.get(field)
             if date_str:
                 try:
-                    return date_parser.parse(date_str)
+                    parsed = date_parser.parse(date_str)
+                    # Some feeds (e.g. Nature) give date-only strings with no
+                    # timezone, which parse to naive datetimes that can't be
+                    # compared against the UTC-aware cutoff_date.
+                    if parsed.tzinfo is None:
+                        parsed = parsed.replace(tzinfo=timezone.utc)
+                    return parsed
                 except Exception:
                     continue
 

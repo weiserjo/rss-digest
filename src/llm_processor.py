@@ -84,14 +84,13 @@ class LLMProcessor:
                 messages=[
                     {
                         "role": "system",
-                        "content": "You are a skilled editor creating weekly news digests for data journalists. Analyze the provided articles and create a comprehensive digest in clean, semantic HTML."
+                        "content": "You are a skilled editor creating weekly digests for the audience and topic described in the user prompt. Follow its instructions precisely and produce a comprehensive digest in clean, semantic HTML."
                     },
                     {
                         "role": "user",
                         "content": prompt
                     }
                 ],
-                temperature=0.5,  # Balanced for analysis and creative synthesis
                 max_tokens=4000  # Larger limit for full digest with analysis
             )
 

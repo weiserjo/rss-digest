@@ -9,7 +9,7 @@ import sys
 import logging
 import argparse
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Dict, List, Optional
 
 from dotenv import load_dotenv
 
@@ -22,18 +22,47 @@ from config.feeds import RSS_FEEDS, DIGEST_GENERATION_PROMPT
 # Configure logging
 def setup_logging(verbose: bool = False):
     """Setup logging configuration."""
+    # Windows consoles default to cp1252, which can't encode characters
+    # like unicode checkmarks or dashes that show up in log messages.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding='utf-8')
+
     level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
         level=level,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.StreamHandler(sys.stdout),
-            logging.FileHandler('digest.log')
+            logging.FileHandler('digest.log', encoding='utf-8')
         ]
     )
 
+    # These libraries' DEBUG logs dump the full request (including the whole
+    # prompt) even under our own --verbose; keep them quiet regardless.
+    for noisy_logger in ("openai", "httpx", "httpcore"):
+        logging.getLogger(noisy_logger).setLevel(logging.WARNING)
+
 
 logger = logging.getLogger(__name__)
+
+
+def _sample_across_feeds(articles: List[Dict], limit: int) -> List[Dict]:
+    """
+    Take up to `limit` articles round-robin across feed categories, so a
+    --test slice covers multiple feeds instead of one feed's oldest items.
+    """
+    by_feed: Dict[str, List[Dict]] = {}
+    for article in articles:
+        by_feed.setdefault(article['feed_category'], []).append(article)
+
+    sampled = []
+    while len(sampled) < limit and any(by_feed.values()):
+        for feed_articles in by_feed.values():
+            if feed_articles:
+                sampled.append(feed_articles.pop(0))
+                if len(sampled) >= limit:
+                    break
+    return sampled
 
 
 class DigestOrchestrator:
@@ -100,8 +129,8 @@ class DigestOrchestrator:
 
             # Limit articles if specified (for testing)
             if limit:
-                articles = articles[:limit]
-                logger.info(f"Limited to {limit} articles for testing")
+                articles = _sample_across_feeds(articles, limit)
+                logger.info(f"Limited to {limit} articles for testing (sampled across feeds)")
 
             # Step 2: Generate digest with LLM
             logger.info(f"\n[STEP 2] Generating digest from {len(articles)} articles")

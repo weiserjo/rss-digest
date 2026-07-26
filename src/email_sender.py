@@ -281,7 +281,13 @@ def test_email_sender(smtp_password: str, from_email: str, recipient: str) -> No
 
 if __name__ == "__main__":
     import os
+    import sys
     from dotenv import load_dotenv
+
+    # Windows consoles default to cp1252, which can't encode the emoji
+    # printed below.
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding='utf-8')
 
     logging.basicConfig(
         level=logging.INFO,
