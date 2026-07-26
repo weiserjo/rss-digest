@@ -91,7 +91,10 @@ class LLMProcessor:
                         "content": prompt
                     }
                 ],
-                max_tokens=4000  # Larger limit for full digest with analysis
+                # Reasoning models can spend a large share of this budget on
+                # internal reasoning before writing any visible output, so it
+                # needs enough headroom for both, not just the final HTML.
+                max_tokens=16000
             )
 
             # Track token usage
@@ -100,7 +103,16 @@ class LLMProcessor:
                 self.total_tokens_used += tokens
                 logger.info(f"Digest generation tokens used: {tokens}")
 
-            digest_html = response.choices[0].message.content.strip()
+            choice = response.choices[0]
+            digest_html = (choice.message.content or "").strip()
+
+            if not digest_html:
+                logger.error(
+                    f"LLM returned empty content (finish_reason={choice.finish_reason}). "
+                    "This usually means max_tokens was hit before any visible output was "
+                    "written (e.g. spent on reasoning) - consider raising max_tokens further."
+                )
+                return None
 
             logger.info("Successfully generated digest")
             return digest_html
