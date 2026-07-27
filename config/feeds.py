@@ -4,12 +4,12 @@ Easy to modify without changing core code.
 """
 
 RSS_FEEDS = {
+    "Nat. Commun.": "https://www.nature.com/ncomms.rss",
     "Angew. Chem.": "https://onlinelibrary.wiley.com/feed/15213773/most-recent",
-    "Chem. Sci.": "http://feeds.rsc.org/rss/sc",
     "Int. J. Quant. Chem.": "https://onlinelibrary.wiley.com/action/showFeed?jc=1097461x&type=etoc&feed=rss",
     "J. Comput. Chem.": "https://onlinelibrary.wiley.com/action/showFeed?jc=1096987x&type=etoc&feed=rss",
     "J. Chem. Phys.": "https://pubs.aip.org/rss/site_1000043/LatestOpenIssueArticles_1000024.xml",
-    "Nat. Commun.": "https://www.nature.com/ncomms.rss",
+    "Chem. Sci.": "http://feeds.rsc.org/rss/sc",
     "Phys. Chem. Chem. Phys.": "http://feeds.rsc.org/rss/cp",
 }
 # To do: ACS journals
@@ -155,7 +155,7 @@ TASK: PRODUCE THE DIGEST
    - Always include this section, verbatim in substance, the last sentence bold:
      Note that the ACS journal feeds (JACS, JCIM, JCTC, JPCA, JPCB, JPCC, JPCL) are still
      missing from this digest due to unresolved Cloudflare issues on ACS's end. Furthermore,
-     the RSC journal feeds (CS, PCCP) haven't been updated since a server migration at the 
+     the RSC journal feeds (CS, PCCP) have stopped updating since a server migration at the 
      end of June. 
      
      Make sure to check whether these RSS feeds are working again and manually (re-)add them
