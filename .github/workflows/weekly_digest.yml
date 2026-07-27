@@ -1,10 +1,10 @@
 name: Weekly RSS Digest
 
 on:
-  # TEMPORARY: near-term test to check whether scheduled triggers fire at all
-  # on this fork. Revert to '0 8 * * 1' (Monday 8:00 UTC) once confirmed.
+  # Run every Monday at 10:00 AM CET (8:00 AM UTC in winter, 9:00 AM UTC in summer)
+  # Using 8:00 AM UTC to be safe
   schedule:
-    - cron: '30 9 * * *'
+    - cron: '0 8 * * 1'
 
   # Allow manual trigger
   workflow_dispatch:
