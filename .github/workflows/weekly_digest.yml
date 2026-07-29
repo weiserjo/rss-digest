@@ -1,11 +1,10 @@
 name: Weekly RSS Digest
 
 on:
-  # TEMPORARY: moved to Wednesday to test whether the schedule fires on its
-  # own now that the repo/workflow is past GitHub's new-repo scheduling
-  # deprioritization window. Revert to '0 8 * * 1' (Monday) once confirmed.
+  # Run every Monday at 8:00 AM CET (6:00 AM UTC in winter, 7:00 AM UTC in summer)
+  # Using 6:00 AM UTC to be safe
   schedule:
-    - cron: '0 8 * * 3'
+    - cron: '0 6 * * 1'
 
   # Allow manual trigger
   workflow_dispatch:
