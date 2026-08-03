@@ -4,7 +4,7 @@ on:
   # Run every Monday at 8:00 AM CET (6:00 AM UTC in winter, 7:00 AM UTC in summer)
   # Using 6:00 AM UTC to be safe
   schedule:
-    - cron: '0 6 * * 1'
+    - cron: '0 6 * * 4'
 
   # Allow manual trigger
   workflow_dispatch:
