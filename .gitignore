@@ -67,3 +67,6 @@ Thumbs.db
 # Temporary Files
 *.tmp
 *.temp
+
+# Internal planning docs
+docs/superpowers/

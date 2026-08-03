@@ -1,12 +1,10 @@
 [project]
 name = "rss-digest"
 version = "0.2.0"
-description = "Simplified automated system to fetch, analyze, and deliver weekly digests from RSS feeds (stateless, no database)"
+description = "Simplified automated system to fetch, analyze, and deliver weekly digests from Crossref journal metadata (stateless, no database)"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "feedparser>=6.0.11",
-    "python-dateutil>=2.8.2",
     "openai>=1.12.0",
     "python-dotenv>=1.0.1",
 ]

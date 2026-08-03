@@ -1,6 +1,6 @@
 """
 Main Orchestration Script
-Simplified workflow: Fetch RSS articles → Generate AI digest → Send email
+Simplified workflow: Fetch articles from Crossref → Generate AI digest → Send email
 No database dependencies - completely stateless.
 """
 
@@ -13,10 +13,10 @@ from typing import Dict, List, Optional
 
 from dotenv import load_dotenv
 
-from rss_fetcher import RSSFetcher
+from crossref_fetcher import CrossrefFetcher
 from llm_processor import LLMProcessor
 from email_sender import EmailSender
-from config.feeds import RSS_FEEDS, DIGEST_GENERATION_PROMPT
+from config.feeds import CROSSREF_SOURCES, DIGEST_GENERATION_PROMPT
 
 
 # Configure logging
@@ -86,7 +86,7 @@ class DigestOrchestrator:
             recipient_email: Email address to send digest to
             openai_base_url: Base URL for OpenAI-compatible API (optional)
         """
-        self.rss_fetcher = RSSFetcher(RSS_FEEDS)
+        self.crossref_fetcher = CrossrefFetcher(CROSSREF_SOURCES, mailto=from_email)
         self.llm_processor = LLMProcessor(openai_api_key, base_url=openai_base_url)
         self.email_sender = EmailSender(smtp_password, from_email)
         self.recipient_email = recipient_email
@@ -95,7 +95,7 @@ class DigestOrchestrator:
 
     def generate_and_send_digest(
         self,
-        days: int = 7,
+        days: int = 8,
         dry_run: bool = False,
         save_html: bool = True,
         limit: Optional[int] = None
@@ -113,16 +113,16 @@ class DigestOrchestrator:
             True if successful, False otherwise
         """
         logger.info("=" * 60)
-        logger.info("STARTING RSS DIGEST WORKFLOW")
+        logger.info("STARTING DIGEST WORKFLOW")
         logger.info("=" * 60)
 
         try:
-            # Step 1: Fetch articles from RSS feeds
+            # Step 1: Fetch articles from Crossref
             logger.info(f"\n[STEP 1] Fetching articles from past {days} days")
-            articles = self.rss_fetcher.fetch_recent_articles(days)
+            articles = self.crossref_fetcher.fetch_recent_articles(days)
 
             if not articles:
-                logger.warning("No articles fetched from RSS feeds")
+                logger.warning("No articles fetched")
                 return False
 
             logger.info(f"✓ Fetched {len(articles)} articles")
@@ -208,7 +208,7 @@ class DigestOrchestrator:
 def main():
     """Main entry point with CLI argument parsing."""
     parser = argparse.ArgumentParser(
-        description="RSS Weekly Digest - Automated RSS monitoring and digest generation"
+        description="RSS Weekly Digest - Automated journal monitoring and digest generation"
     )
 
     parser.add_argument(
@@ -226,8 +226,8 @@ def main():
     parser.add_argument(
         '--days',
         type=int,
-        default=7,
-        help='Number of days to look back for articles (default: 7)'
+        default=8,
+        help='Number of days to look back for articles (default: 8)'
     )
 
     parser.add_argument(

@@ -1,21 +1,26 @@
 """
-RSS feed configuration.
+Crossref-based journal source configuration.
 Easy to modify without changing core code.
 """
 
-RSS_FEEDS = {
-    "Nat. Commun.": "https://www.nature.com/ncomms.rss",
-    "Angew. Chem.": "https://onlinelibrary.wiley.com/feed/15213773/most-recent",
-    "Int. J. Quant. Chem.": "https://onlinelibrary.wiley.com/action/showFeed?jc=1097461x&type=etoc&feed=rss",
-    "J. Comput. Chem.": "https://onlinelibrary.wiley.com/action/showFeed?jc=1096987x&type=etoc&feed=rss",
-    "J. Chem. Phys.": "https://pubs.aip.org/rss/site_1000043/LatestOpenIssueArticles_1000024.xml",
-    "Chem. Sci.": "http://feeds.rsc.org/rss/sc",
-    "Phys. Chem. Chem. Phys.": "http://feeds.rsc.org/rss/cp",
+CROSSREF_SOURCES = {
+    "Angew. Chem.": "1521-3773",
+    "Int. J. Quant. Chem.": "1097-461X",
+    "J. Comput. Chem.": "1096-987X",
+    "J. Chem. Phys.": "1089-7690",
+    "Chem. Sci.": "2041-6539",
+    "Phys. Chem. Chem. Phys.": "1463-9084",
+    "JACS": "1520-5126",
+    "J. Chem. Inf. Model.": "1549-960X",
+    "J. Chem. Theory Comput.": "1549-9626",
+    "J. Phys. Chem. A": "1520-5215",
+    "J. Phys. Chem. B": "1520-5207",
+    "J. Phys. Chem. C": "1932-7455",
+    "J. Phys. Chem. Lett.": "1948-7185",
 }
-# To do: ACS journals
 
 DIGEST_GENERATION_PROMPT = """You are creating a weekly literature digest for a computational chemistry / theoretical
-photophysics PhD researcher. Your job is to triage a week of journal RSS output and surface
+photophysics PhD researcher. Your job is to triage a week of journal output and surface
 the handful of papers that genuinely matter to them.
  
 ARTICLES FROM {date_range} ({article_count} articles):
@@ -93,6 +98,9 @@ SELECTION RULES
 - Do not invent details. If the abstract does not state something (a rate, a method, a
   system), do not assert it. If a listing is title-only, say what can be inferred and
   mark it as needing a look at the full text.
+- Do not systematically down-rank title-only listings purely for lacking an abstract. For
+  some source journals (ACS), the absence of an abstract is a data availability artifact,
+  not a signal about the paper's relevance.
  
 ================================================================================
 TONE AND LANGUAGE
@@ -150,18 +158,7 @@ TASK: PRODUCE THE DIGEST
      across issues.
    - Skip this section entirely if nothing substantive suggests itself. An empty section
      is better than a filler one.
- 
-5. FEED STATUS
-   - Always include this section, verbatim in substance, the last sentence bold:
-     Note that the ACS journal feeds (JACS, JCIM, JCTC, JPCA, JPCB, JPCC, JPCL) are still
-     missing from this digest due to unresolved Cloudflare issues on ACS's end. Furthermore,
-     the RSC journal feeds (CS, PCCP) have stopped updating since a server migration at the 
-     end of June. 
-     
-     Make sure to check whether these RSS feeds are working again and manually (re-)add them
-     if so.
-   - Render this as a visually distinct closing note.
- 
+
 ================================================================================
 FORMATTING REQUIREMENTS
 ================================================================================
