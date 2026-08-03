@@ -4,18 +4,18 @@ This document provides context for AI assistants (like Claude) working on this p
 
 ## Project Overview
 
-**Purpose**: A stateless RSS digest generator that fetches articles, uses LLM to create summaries, and emails them.
+**Purpose**: A stateless digest generator that fetches journal articles from Crossref, uses LLM to create summaries, and emails them.
 
 **Key Design Principle**: Simplicity. No database, no state tracking, no complexity. Each run is completely independent.
 
 ## Architecture
 
 ```
-RSS Feeds → fetch_recent_articles() → generate_digest() → send_email()
+Crossref API (journal ISSNs) → fetch_recent_articles() → generate_digest() → send_email()
 ```
 
 **Components**:
-1. `rss_fetcher.py` - Fetches articles from RSS feeds using feedparser
+1. `crossref_fetcher.py` - Fetches articles from Crossref's REST API by journal ISSN
 2. `llm_processor.py` - Sends articles to any OpenAI-compatible API for digest generation
 3. `email_sender.py` - Sends HTML digest via Gmail SMTP (Google Workspace)
 4. `main.py` - Orchestrates the workflow
@@ -26,7 +26,7 @@ RSS Feeds → fetch_recent_articles() → generate_digest() → send_email()
 
 **Original Design**: Had a PostgreSQL database to track processed articles and avoid duplicates.
 
-**Current Design**: Database removed entirely. The system fetches articles from the last N days (default: 7) and processes them all in a single LLM call. This is acceptable because:
+**Current Design**: Database removed entirely. The system fetches articles from the last N days (default: 8) and processes them all in a single LLM call. This is acceptable because:
 - Weekly digests don't need deduplication
 - Cost is negligible (~$0.002 per run with Gemini Flash, even free with openrouter.ai free models)
 - Simpler architecture means easier maintenance
@@ -46,10 +46,10 @@ RSS Feeds → fetch_recent_articles() → generate_digest() → send_email()
 - Handles environment variables and logging
 - No business logic - pure orchestration
 
-### src/rss_fetcher.py
-- `RSSFetcher` class with single public method: `fetch_recent_articles(days)`
-- Uses `feedparser` library
-- Filters articles by publication date
+### src/crossref_fetcher.py
+- `CrossrefFetcher` class with single public method: `fetch_recent_articles(days)`
+- Queries Crossref's REST API (`/journals/{issn}/works`) per configured journal ISSN
+- Filters articles by Crossref's `created` (deposit) date
 - Returns list of dicts with: `url`, `title`, `rss_summary`, `feed_category`, `published_date`
 
 ### src/llm_processor.py
@@ -67,7 +67,7 @@ RSS Feeds → fetch_recent_articles() → generate_digest() → send_email()
 - Uses template from `templates/email_template.html`
 
 ### config/feeds.py
-- `RSS_FEEDS` dict - feed URLs by category
+- `CROSSREF_SOURCES` dict - journal display name to ISSN
 - `DIGEST_GENERATION_PROMPT` - LLM instructions for digest format
 - **Important**: This is user configuration, customize for their needs
 
@@ -85,14 +85,18 @@ Optional in `.env`:
 
 ## Common Tasks
 
-### Adding a New RSS Feed
+### Adding a New Journal
 Edit `config/feeds.py`:
 ```python
-RSS_FEEDS = {
-    "Existing": "https://example.com/feed.xml",
-    "New Feed": "https://newfeed.com/rss.xml",  # Add here
+CROSSREF_SOURCES = {
+    "Existing": "1234-5678",
+    "New Journal": "8765-4321",  # Add here
 }
 ```
+Verify the ISSN against Crossref's own `https://api.crossref.org/journals?query=<journal+name>`
+endpoint rather than assuming it from memory — print and electronic ISSNs return different
+result sets, so pulling one from a citation or the journal's homepage can silently point at
+the wrong record.
 
 ### Changing Digest Format
 Edit `DIGEST_GENERATION_PROMPT` in `config/feeds.py`. The prompt is the entire UI for digest customization.
@@ -121,9 +125,7 @@ This processes 5 articles, doesn't send email, and shows detailed logs.
 ### Dependencies
 
 Managed via `pyproject.toml`:
-- `feedparser` - RSS parsing
 - `openai` - OpenAI-compatible API client
-- `python-dateutil` - Date handling
 - `python-dotenv` - Environment variables
 
 Install with: `uv sync`
@@ -136,7 +138,7 @@ Requires Python 3.13+ (specified in `pyproject.toml`)
 ## Common Issues
 
 ### "No articles found"
-- RSS feeds might not have articles in the date range
+- Crossref may not have articles in the date range for the configured journals
 - Try `--days 14` to extend range
 - Use `--verbose` to see what's being fetched
 
@@ -156,7 +158,7 @@ Requires Python 3.13+ (specified in `pyproject.toml`)
 ### Import errors
 - Run `uv sync` to install dependencies
 - Ensure you're using `uv run python` to run scripts
-- Note: `main.py` uses relative imports (e.g., `from rss_fetcher import RSSFetcher`) which work because scripts are run from the project root with `uv run python src/main.py`
+- Note: `main.py` uses relative imports (e.g., `from crossref_fetcher import CrossrefFetcher`) which work because scripts are run from the project root with `uv run python src/main.py`
 
 ## File Locations
 
