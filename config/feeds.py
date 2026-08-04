@@ -10,7 +10,7 @@ CROSSREF_SOURCES = {
     "J. Chem. Phys.": "1089-7690",
     "Chem. Sci.": "2041-6539",
     "Phys. Chem. Chem. Phys.": "1463-9084",
-    "JACS": "1520-5126",
+    "J. Am. Chem. Soc.": "1520-5126",
     "J. Chem. Inf. Model.": "1549-960X",
     "J. Chem. Theory Comput.": "1549-9626",
     "J. Phys. Chem. A": "1520-5215",
