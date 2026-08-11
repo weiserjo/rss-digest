@@ -11,6 +11,38 @@ from openai import RateLimitError, APIError, APIConnectionError
 
 logger = logging.getLogger(__name__)
 
+# Linear model fit to real runs (with reasoning_effort="low"):
+#   5 articles   -> 2,585 completion tokens
+#   921 articles -> 24,586 completion tokens
+# tokens_needed = TOKENS_BASE + TOKENS_PER_ARTICLE * article_count
+TOKENS_BASE = 2465
+TOKENS_PER_ARTICLE = 24
+MAX_TOKENS_SAFETY_MARGIN = 1.3
+MAX_TOKENS_FLOOR = 8000
+MAX_TOKENS_CEILING = 64000
+
+
+def _estimate_max_tokens(article_count: int) -> int:
+    """
+    Estimate a safe max_tokens budget from article count, based on the
+    linear model above. Both data points are true natural-completion values
+    (finish_reason=stop, not truncated), so the margin only needs to cover
+    run-to-run variance and extrapolation beyond the observed range, not
+    correct for a bad fit.
+    """
+    estimated = TOKENS_BASE + TOKENS_PER_ARTICLE * article_count
+    with_margin = round(estimated * MAX_TOKENS_SAFETY_MARGIN)
+    clamped = min(max(with_margin, MAX_TOKENS_FLOOR), MAX_TOKENS_CEILING)
+
+    if with_margin > MAX_TOKENS_CEILING:
+        logger.warning(
+            f"max_tokens estimate for {article_count} articles ({with_margin}) exceeds "
+            f"the {MAX_TOKENS_CEILING} ceiling - capping it, which reduces or eliminates "
+            "the safety margin. Consider raising MAX_TOKENS_CEILING."
+        )
+
+    return clamped
+
 
 class LLMProcessor:
     """Processes articles using LLM via OpenAI-compatible APIs."""
@@ -78,7 +110,12 @@ class LLMProcessor:
 
             logger.info(f"Generating digest for {len(articles)} articles")
 
-            # Call LLM with larger token limit for digest
+            max_tokens = _estimate_max_tokens(len(articles))
+            logger.info(f"Using max_tokens={max_tokens} for {len(articles)} articles")
+
+            # reasoning_effort="low" keeps this triage/summarization task from
+            # burning its token budget on reasoning depth it doesn't need,
+            # leaving more of max_tokens available for the actual digest text.
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -91,10 +128,8 @@ class LLMProcessor:
                         "content": prompt
                     }
                 ],
-                # Reasoning models can spend a large share of this budget on
-                # internal reasoning before writing any visible output, so it
-                # needs enough headroom for both, not just the final HTML.
-                max_tokens=16000
+                max_tokens=max_tokens,
+                extra_body={"reasoning_effort": "low"}
             )
 
             # Track token usage
